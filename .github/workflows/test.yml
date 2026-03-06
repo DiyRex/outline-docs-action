@@ -25,7 +25,8 @@ jobs:
           description: 'Auto-created by test workflow. Safe to delete.'
 
       - name: 'Setup result'
-        run: echo "Collection ID: ${{ steps.setup.outputs.collection_id }}"
+        run: |
+          echo "Collection ID: ${{ steps.setup.outputs.collection_id }}"
 
       # ── 1. Create document (inline text) ─────────────────────────────────
       - name: 'Test 1: Create document (inline text)'
