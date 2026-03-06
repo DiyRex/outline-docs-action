@@ -7,8 +7,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       # ── Setup: Create test collection ────────────────────────────────────
       - name: Set timestamp
         id: ts
@@ -16,7 +14,7 @@ jobs:
 
       - name: 'Setup: Create test collection'
         id: setup
-        uses: ./
+        uses: DiyRex/outline-docs-action@main
         with:
           outline_url: ${{ secrets.OUTLINE_URL }}
           api_key: ${{ secrets.OUTLINE_API_KEY }}
@@ -31,7 +29,7 @@ jobs:
       # ── 1. Create document (inline text) ─────────────────────────────────
       - name: 'Test 1: Create document (inline text)'
         id: create
-        uses: ./
+        uses: DiyRex/outline-docs-action@main
         with:
           outline_url: ${{ secrets.OUTLINE_URL }}
           api_key: ${{ secrets.OUTLINE_API_KEY }}
@@ -81,7 +79,7 @@ jobs:
 
       - name: 'Test 2: Create document (from file)'
         id: create_file
-        uses: ./
+        uses: DiyRex/outline-docs-action@main
         with:
           outline_url: ${{ secrets.OUTLINE_URL }}
           api_key: ${{ secrets.OUTLINE_API_KEY }}
@@ -99,7 +97,7 @@ jobs:
       # ── 3. Update document ───────────────────────────────────────────────
       - name: 'Test 3: Update document'
         id: update
-        uses: ./
+        uses: DiyRex/outline-docs-action@main
         with:
           outline_url: ${{ secrets.OUTLINE_URL }}
           api_key: ${{ secrets.OUTLINE_API_KEY }}
@@ -132,7 +130,7 @@ jobs:
       # ── 4. Find document ─────────────────────────────────────────────────
       - name: 'Test 4: Find document'
         id: find
-        uses: ./
+        uses: DiyRex/outline-docs-action@main
         with:
           outline_url: ${{ secrets.OUTLINE_URL }}
           api_key: ${{ secrets.OUTLINE_API_KEY }}
@@ -148,7 +146,7 @@ jobs:
       # ── 5. Create + Share ────────────────────────────────────────────────
       - name: 'Test 5: Create with share link'
         id: share
-        uses: ./
+        uses: DiyRex/outline-docs-action@main
         with:
           outline_url: ${{ secrets.OUTLINE_URL }}
           api_key: ${{ secrets.OUTLINE_API_KEY }}
@@ -171,7 +169,7 @@ jobs:
       # ── 6. Create as draft ───────────────────────────────────────────────
       - name: 'Test 6: Create as draft'
         id: draft
-        uses: ./
+        uses: DiyRex/outline-docs-action@main
         with:
           outline_url: ${{ secrets.OUTLINE_URL }}
           api_key: ${{ secrets.OUTLINE_API_KEY }}
@@ -190,7 +188,7 @@ jobs:
       # ── Cleanup: Delete test collection ──────────────────────────────────
       - name: 'Cleanup: Delete test collection'
         if: always()
-        uses: ./
+        uses: DiyRex/outline-docs-action@main
         with:
           outline_url: ${{ secrets.OUTLINE_URL }}
           api_key: ${{ secrets.OUTLINE_API_KEY }}
