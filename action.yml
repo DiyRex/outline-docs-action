@@ -1,0 +1,83 @@
+name: 'Outline Docs Action'
+description: 'Create, update, and share documents in Outline wiki from GitHub Actions'
+author: 'DiyRex'
+
+branding:
+  icon: 'file-text'
+  color: 'blue'
+
+inputs:
+  outline_url:
+    description: 'Outline instance URL (e.g., https://wiki.example.com)'
+    required: true
+
+  api_key:
+    description: 'Outline API key'
+    required: true
+
+  action:
+    description: 'Action to perform: create, update, or find'
+    required: true
+    default: 'create'
+
+  collection_id:
+    description: 'Collection ID (required for create)'
+    required: false
+
+  document_id:
+    description: 'Document ID (required for update)'
+    required: false
+
+  title:
+    description: 'Document title (required for create)'
+    required: false
+
+  text:
+    description: 'Document content as markdown (alternative to file_path)'
+    required: false
+
+  file_path:
+    description: 'Path to markdown file for document content (alternative to text)'
+    required: false
+
+  publish:
+    description: 'Publish document immediately (default: true)'
+    required: false
+    default: 'true'
+
+  share:
+    description: 'Create a public share link (default: false)'
+    required: false
+    default: 'false'
+
+outputs:
+  document_id:
+    description: 'ID of the created/updated document'
+    value: ${{ steps.outline.outputs.document_id }}
+
+  document_url:
+    description: 'URL to the document in Outline'
+    value: ${{ steps.outline.outputs.document_url }}
+
+  share_url:
+    description: 'Public share URL (only if share=true)'
+    value: ${{ steps.outline.outputs.share_url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Outline API
+      id: outline
+      shell: bash
+      env:
+        OUTLINE_URL: ${{ inputs.outline_url }}
+        API_KEY: ${{ inputs.api_key }}
+        ACTION: ${{ inputs.action }}
+        COLLECTION_ID: ${{ inputs.collection_id }}
+        DOCUMENT_ID: ${{ inputs.document_id }}
+        TITLE: ${{ inputs.title }}
+        TEXT: ${{ inputs.text }}
+        FILE_PATH: ${{ inputs.file_path }}
+        PUBLISH: ${{ inputs.publish }}
+        SHARE: ${{ inputs.share }}
+      run: bash "${{ github.action_path }}/scripts/outline.sh"
