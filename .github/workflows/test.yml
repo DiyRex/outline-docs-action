@@ -1,0 +1,216 @@
+name: Test Outline Docs Action
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Setup: Create test collection ────────────────────────────────────
+      - name: Set timestamp
+        id: ts
+        run: echo "timestamp=$(date +%Y%m%d-%H%M%S)" >> "$GITHUB_OUTPUT"
+
+      - name: 'Setup: Create test collection'
+        id: setup
+        uses: ./
+        with:
+          outline_url: ${{ secrets.OUTLINE_URL }}
+          api_key: ${{ secrets.OUTLINE_API_KEY }}
+          action: create_collection
+          title: 'CI Test ${{ steps.ts.outputs.timestamp }}'
+          description: 'Auto-created by test workflow. Safe to delete.'
+
+      - name: 'Setup result'
+        run: echo "Collection ID: ${{ steps.setup.outputs.collection_id }}"
+
+      # ── 1. Create document (inline text) ─────────────────────────────────
+      - name: 'Test 1: Create document (inline text)'
+        id: create
+        uses: ./
+        with:
+          outline_url: ${{ secrets.OUTLINE_URL }}
+          api_key: ${{ secrets.OUTLINE_API_KEY }}
+          action: create
+          collection_id: ${{ steps.setup.outputs.collection_id }}
+          title: 'Inline Text - ${{ steps.ts.outputs.timestamp }}'
+          text: |
+            ## Automated Test Document
+
+            This document was created by **GitHub Actions** to test `outline-docs-action`.
+
+            | Field | Value |
+            |-------|-------|
+            | Run ID | ${{ github.run_id }} |
+            | Actor | ${{ github.actor }} |
+            | Timestamp | ${{ steps.ts.outputs.timestamp }} |
+
+            ### Checklist
+            - [x] Create with inline text
+            - [ ] Create from file
+            - [ ] Update document
+            - [ ] Find document
+            - [ ] Share document
+
+      - name: 'Result 1'
+        run: |
+          echo "CREATE (inline text)"
+          echo "   ID:  ${{ steps.create.outputs.document_id }}"
+          echo "   URL: ${{ steps.create.outputs.document_url }}"
+
+      # ── 2. Create document (from file) ───────────────────────────────────
+      - name: Generate test markdown file
+        run: |
+          cat > /tmp/test-doc.md << 'MARKDOWN'
+          ## File-Based Document
+
+          This was created from a **markdown file** on disk.
+
+          ```yaml
+          action: create
+          source: file_path
+          runner: ubuntu-latest
+          ```
+
+          > Testing code blocks and blockquotes render correctly.
+          MARKDOWN
+
+      - name: 'Test 2: Create document (from file)'
+        id: create_file
+        uses: ./
+        with:
+          outline_url: ${{ secrets.OUTLINE_URL }}
+          api_key: ${{ secrets.OUTLINE_API_KEY }}
+          action: create
+          collection_id: ${{ steps.setup.outputs.collection_id }}
+          title: 'From File - ${{ steps.ts.outputs.timestamp }}'
+          file_path: '/tmp/test-doc.md'
+
+      - name: 'Result 2'
+        run: |
+          echo "CREATE (from file)"
+          echo "   ID:  ${{ steps.create_file.outputs.document_id }}"
+          echo "   URL: ${{ steps.create_file.outputs.document_url }}"
+
+      # ── 3. Update document ───────────────────────────────────────────────
+      - name: 'Test 3: Update document'
+        id: update
+        uses: ./
+        with:
+          outline_url: ${{ secrets.OUTLINE_URL }}
+          api_key: ${{ secrets.OUTLINE_API_KEY }}
+          action: update
+          document_id: ${{ steps.create.outputs.document_id }}
+          text: |
+            ## Automated Test Document (Updated)
+
+            This document was **updated** by GitHub Actions.
+
+            | Field | Value |
+            |-------|-------|
+            | Run ID | ${{ github.run_id }} |
+            | Actor | ${{ github.actor }} |
+            | Status | Updated |
+
+            ### Checklist
+            - [x] Create with inline text
+            - [x] Create from file
+            - [x] Update document
+            - [ ] Find document
+            - [ ] Share document
+
+      - name: 'Result 3'
+        run: |
+          echo "UPDATE"
+          echo "   ID:  ${{ steps.update.outputs.document_id }}"
+          echo "   URL: ${{ steps.update.outputs.document_url }}"
+
+      # ── 4. Find document ─────────────────────────────────────────────────
+      - name: 'Test 4: Find document'
+        id: find
+        uses: ./
+        with:
+          outline_url: ${{ secrets.OUTLINE_URL }}
+          api_key: ${{ secrets.OUTLINE_API_KEY }}
+          action: find
+          title: 'Inline Text - ${{ steps.ts.outputs.timestamp }}'
+
+      - name: 'Result 4'
+        run: |
+          echo "FIND"
+          echo "   ID:  ${{ steps.find.outputs.document_id }}"
+          echo "   URL: ${{ steps.find.outputs.document_url }}"
+
+      # ── 5. Create + Share ────────────────────────────────────────────────
+      - name: 'Test 5: Create with share link'
+        id: share
+        uses: ./
+        with:
+          outline_url: ${{ secrets.OUTLINE_URL }}
+          api_key: ${{ secrets.OUTLINE_API_KEY }}
+          action: create
+          collection_id: ${{ steps.setup.outputs.collection_id }}
+          title: 'Shared Doc - ${{ steps.ts.outputs.timestamp }}'
+          text: |
+            ## Public Document
+
+            This document has a **public share link** generated automatically.
+          share: true
+
+      - name: 'Result 5'
+        run: |
+          echo "CREATE + SHARE"
+          echo "   ID:    ${{ steps.share.outputs.document_id }}"
+          echo "   URL:   ${{ steps.share.outputs.document_url }}"
+          echo "   Share: ${{ steps.share.outputs.share_url }}"
+
+      # ── 6. Create as draft ───────────────────────────────────────────────
+      - name: 'Test 6: Create as draft'
+        id: draft
+        uses: ./
+        with:
+          outline_url: ${{ secrets.OUTLINE_URL }}
+          api_key: ${{ secrets.OUTLINE_API_KEY }}
+          action: create
+          collection_id: ${{ steps.setup.outputs.collection_id }}
+          title: 'Draft Doc - ${{ steps.ts.outputs.timestamp }}'
+          text: 'This is a draft and should not be published.'
+          publish: false
+
+      - name: 'Result 6'
+        run: |
+          echo "CREATE (draft)"
+          echo "   ID:  ${{ steps.draft.outputs.document_id }}"
+          echo "   URL: ${{ steps.draft.outputs.document_url }}"
+
+      # ── Cleanup: Delete test collection ──────────────────────────────────
+      - name: 'Cleanup: Delete test collection'
+        if: always()
+        uses: ./
+        with:
+          outline_url: ${{ secrets.OUTLINE_URL }}
+          api_key: ${{ secrets.OUTLINE_API_KEY }}
+          action: delete_collection
+          collection_id: ${{ steps.setup.outputs.collection_id }}
+
+      # ── Summary ──────────────────────────────────────────────────────────
+      - name: Test Summary
+        if: always()
+        run: |
+          echo ""
+          echo "========================================"
+          echo "  TEST RESULTS - ${{ steps.ts.outputs.timestamp }}"
+          echo "========================================"
+          echo ""
+          echo "Collection: ${{ steps.setup.outputs.collection_id }} (cleaned up)"
+          echo ""
+          echo "1. Create (inline):  ${{ steps.create.outputs.document_id }}"
+          echo "2. Create (file):    ${{ steps.create_file.outputs.document_id }}"
+          echo "3. Update:           ${{ steps.update.outputs.document_id }}"
+          echo "4. Find:             ${{ steps.find.outputs.document_id }}"
+          echo "5. Create + Share:   ${{ steps.share.outputs.document_id }}"
+          echo "   Share URL:        ${{ steps.share.outputs.share_url }}"
+          echo "6. Draft:            ${{ steps.draft.outputs.document_id }}"
